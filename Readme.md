@@ -59,14 +59,14 @@ you call on execution or by setting parameters in Parameter Store. If you dont s
 
 your event should look something like this:
 
-{
-    "config": {
-        "token": "{YOURTOKEN}",
-        "namespace": "users/schwamster",
-        "baseUrl": "https://gitlab.com/api/v4",
-        "branch": "master"
-    }
-}
+        {
+            "config": {
+                "token": "{YOURTOKEN}",
+                "namespace": "users/schwamster",
+                "baseUrl": "https://gitlab.com/api/v4",
+                "branch": "master"
+            }
+        }
 
 ## setting the parameters via the Parameter Store
 
