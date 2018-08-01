@@ -1,0 +1,65 @@
+service: gitlab-pipeline-monitor
+
+provider:
+  name: aws
+  runtime: nodejs6.10
+  role: pipelineMonitorRole
+  region: eu-west-1
+  # profile: assumed-profile
+  memorySize: 128
+  stage: ${opt:stage, 'dev'}
+
+functions:
+  run:
+    handler: gitlab-pipeline-monitor.main
+    timeout: 300
+    environment:
+      STAGE: ${opt:stage, 'dev'}
+      LOGQUEUEURL: ${opt:queue, ''}
+    # events: 
+    #   - schedule: rate(10 minutes)
+
+resources:
+  Resources:
+    pipelineMonitorRole:
+      Type: AWS::IAM::Role
+      Properties:
+        RoleName: ${opt:stage, 'dev'}_PipelineMonitorRole 
+        AssumeRolePolicyDocument:
+          Version: '2012-10-17'
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - lambda.amazonaws.com
+              Action: sts:AssumeRole
+        Policies:
+          - PolicyName: pipelineMonitorPolicy
+            PolicyDocument:
+              Version: '2012-10-17'
+              Statement:
+                - Effect: Allow # note that these rights are given in the default policy and are required if you want logs out of your lambda(s)
+                  Action:
+                    - ec2:CreateNetworkInterface
+                    - ec2:DescribeNetworkInterfaces
+                    - ec2:DeleteNetworkInterface
+                    - logs:CreateLogGroup
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                  Resource: '*'
+                - Effect: Allow 
+                  Action:
+                    - "sqs:SendMessage"
+                  Resource: '*'
+                - Effect: Allow 
+                  Action:
+                    - ssm:GetParameters
+                    - ssm:GetParameter
+                  Resource:
+                    - 'Fn::Join':
+                      - '/'
+                      -
+                        - 'arn:aws:ssm:eu-west-1:*:parameter'
+                        - 'gitlab-pipeline-monitor/*'
+    
+
